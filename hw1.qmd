@@ -1,29 +1,374 @@
 ---
-title: "HW1"
+title: "506 HW1 1"
 author: "Steven Leone"
-format: typst
+format: html
 editor: visual
 ---
 
-This is the link to the repo: <https://github.com/leonestv-byte/Homework_1>
+This is the link to the repo: <https://github.com/leonestv-byte/506-hw1>.
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
-```
-
-You can add options to executable code like this
+This is the file for DATASCI 506 HW1.
 
 ```{r}
 #| echo: false
-2 * 2
+# install.packages("readODS")
+library(readODS)
+library(dplyr)
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Exercise 1
+
+a)  Import the data into a data.frame in R. Use the dataset documentation to assign appropriate variable names. (Note: Downloading and unzipping the file can take place outside of your submitted document, but importing the file should be in the submission.)
+
+```{r}
+df <- read.table("data.csv", sep =",", header = TRUE)
+
+descriptions <- read_ods("cultivars-description.ods")
+
+```
+
+b)  Using the information provided in the dataset documentation: Verify that there are 320 observations in the dataset; 40 distinct cultivars; and all the observations were collected from two seasons. Produce a table showing the number of observations from each season.
+
+```{r}
+print(paste("The number of observations in the dataset is: ", nrow(df)))
+```
+
+```{r}
+print(paste("The number of distinct cultivars is: ", nrow(descriptions)))
+```
+
+c)  Use the data to answer the following questions:
+
+What is the correlation between plant height (PH) and grain yield (GY)?
+
+```{r}
+cor(df$PH, df$GY)
+```
+
+Calculate the correlation between PH and GY separately for each season.
+
+```{r}
+season_1_cor <- cor(df[df$Season == 1, ]$PH, df[df$Season == 1, ]$GY,)
+season_1_cor
+
+```
+
+```{r}
+season_2_cor <- cor(df[df$Season == 2, ]$PH, df[df$Season == 2, ]$GY,)
+season_2_cor
+
+```
+
+Which season has the higher correlation?
+
+```{r}
+season_with_higher_correlation <-ifelse(abs(season_1_cor) > abs(season_2_cor), "Season 1", "Season 2")
+print(season_with_higher_correlation)
+```
+
+What is the grain yield of the soybean observation with the greatest plant height?
+
+```{r}
+df[df$PH == max(df$PH), ]$GY
+```
+
+What percentage of observations have a thousand seed weight (MHG) greater than the overall average thousand seed weight?
+
+```{r}
+nrow(df[df$MHG > mean(df$MHG), ]) / nrow(df)
+
+```
+
+Which cultivar has the highest average grain yield?
+
+```{r}
+result <- df |>
+  group_by(Cultivar) |>       
+  summarize(
+    avg_value = mean(GY)     
+  )
+
+result[result$avg_value == max(result$avg_value), ]$Cultivar
+```
+
+d)  Create a table showing the average value of each quantitative variable:
+
+One row containing overall averages.
+
+```{r}
+averages_table <- data.frame(
+  Repetition = mean(df$Repetition, na.rm = TRUE),
+  IFP        = mean(df$IFP, na.rm = TRUE),
+  PH         = mean(df$PH, na.rm = TRUE),
+  
+NLP = mean(df$NLP, na.rm = TRUE),
+
+NGP = mean(df$NGP, na.rm = TRUE),
+
+NGL = mean(df$NGL, na.rm = TRUE),
+
+NS = mean(df$NS, na.rm = TRUE),
+
+MHG = mean(df$MHG, na.rm = TRUE),
+
+GY = mean(df$GY, na.rm = TRUE)
+
+)
+
+
+
+averages_table
+```
+
+One row for each season containing season-specific averages.
+
+```{r}
+df_season_1 = df[df$Season == 1,]
+df_season_2 = df[df$Season == 2,]
+
+averages_table_one <- data.frame(
+  Repetition = mean(df_season_1$Repetition, na.rm = TRUE),
+  IFP        = mean(df_season_1$IFP, na.rm = TRUE),
+  PH         = mean(df_season_1$PH, na.rm = TRUE),
+  
+NLP = mean(df_season_1$NLP, na.rm = TRUE),
+
+NGP = mean(df_season_1$NGP, na.rm = TRUE),
+
+NGL = mean(df_season_1$NGL, na.rm = TRUE),
+
+NS = mean(df_season_1$NS, na.rm = TRUE),
+
+MHG = mean(df_season_1$MHG, na.rm = TRUE),
+
+GY = mean(df_season_1$GY, na.rm = TRUE)
+
+)
+
+
+
+averages_table_one
+
+
+
+
+averages_table_two <- data.frame(
+  Repetition = mean(df_season_2$Repetition, na.rm = TRUE),
+  IFP        = mean(df_season_2$IFP, na.rm = TRUE),
+  PH         = mean(df_season_2$PH, na.rm = TRUE),
+  
+NLP = mean(df_season_2$NLP, na.rm = TRUE),
+
+NGP = mean(df_season_2$NGP, na.rm = TRUE),
+
+NGL = mean(df_season_2$NGL, na.rm = TRUE),
+
+NS = mean(df_season_2$NS, na.rm = TRUE),
+
+MHG = mean(df_season_2$MHG, na.rm = TRUE),
+
+GY = mean(df_season_2$GY, na.rm = TRUE)
+
+)
+
+
+
+averages_table_two
+```
+
+e)  Carry out a series of t-tests to examine whether the ngrain yield (GY) differs between the two seasons. State the null and the alternative hypotheses. Present the R output and interpret the results.
+
+alternative hypothesis: alternative hypothesis: true difference in means between group 1 and group 2 is not equal to 0
+
+null hypothesis: alternative hypothesis: true difference in means between group 1 and group 2 is equal to 0
+
+```{r}
+t_test_result <- t.test(GY ~ Season, data = df)
+
+print(t_test_result)
+```
+
+We fail to reject the null. There is no statistically significant difference.
+
+## Exercise 2
+
+a)  Import the data into a data.frame in R. As with the previous data, you may download the data outside of your submission, but importation should take place inside the problem set submission.
+
+```{r}
+
+
+adult_df <- read.csv(
+  file = "adult.data", 
+  header = FALSE, 
+  strip.white = TRUE,  
+  na.strings = "?"   
+)
+
+head(adult_df)
+```
+
+b)  Clean and simplify the variable names.
+
+```{r}
+col_names <- c("age", "workclass", "fnlwgt", "education", "education_num", "marital_status", "occupation", "relationship", "race", "sex", "capital_gain", "capital_loss", "hours_per_week", "native_country", "income")
+
+adult_df <- read.csv(
+  file = "adult.data", 
+  header = FALSE, 
+  col.names = col_names, 
+  strip.white = TRUE,  
+  na.strings = "?"    
+)
+
+head(adult_df)
+
+```
+
+c)  Examine missing values. Report the number of missing observations for each variable.
+
+```{r}
+print(paste("The number of rows with missing workclass is", nrow(adult_df[is.na(adult_df$workclass), ])))
+print(paste("The number of rows with missing age is",nrow(adult_df[is.na(adult_df$age), ])))
+print(paste("The number of rows with missing fnlwgt is",nrow(adult_df[is.na(adult_df$fnlwgt), ])))
+print(paste("The number of rows with missing education is",nrow(adult_df[is.na(adult_df$education), ])))
+print(paste("The number of rows with missing education number is",nrow(adult_df[is.na(adult_df$education_num), ])))
+print(paste("The number of rows with missing marital status is",nrow(adult_df[is.na(adult_df$marital_status), ])))
+print(paste("The number of rows with missing occupation is",nrow(adult_df[is.na(adult_df$occupation), ])))
+print(paste("The number of rows with missing relationship is",nrow(adult_df[is.na(adult_df$relationship), ])))
+print(paste("The number of rows with missing race is",nrow(adult_df[is.na(adult_df$race), ])))
+print(paste("The number of rows with missing sex is",nrow(adult_df[is.na(adult_df$sex), ])))
+print(paste("The number of rows with missing capital gain is",nrow(adult_df[is.na(adult_df$capital_gain), ])))
+print(paste("The number of rows with missing capital loss is",nrow(adult_df[is.na(adult_df$capital_loss), ])))
+print(paste("The number of rows with missing hours per week is",nrow(adult_df[is.na(adult_df$hours_per_week), ])))
+print(paste("The number of rows with missing native country is",nrow(adult_df[is.na(adult_df$native_country), ])))
+print(paste("The number of rows with missing income is",nrow(adult_df[is.na(adult_df$income), ])))
+```
+
+d)  Restrict the sample to individuals working at least 10 hours per week. Confirm the sample size before and after filtering.
+
+```{r}
+nrow(adult_df)
+
+adult_df = adult_df[adult_df$hours_per_week >= 10,]
+
+nrow(adult_df)
+```
+
+e)  Remove observations with missing values for occupation, workclass, or native country. Explain why.
+
+These are the only columns with missing data.
+
+```{r}
+
+adult_df <- adult_df[!is.na(adult_df$occupation),]
+
+adult_df <- adult_df[!is.na(adult_df$workclass),]
+
+adult_df <- adult_df[!is.na(adult_df$native_country),]
+```
+
+f)  Eliminate any observations with: age less than 18, age greater than 90, education level identified as Preschool.
+
+```{r}
+
+adult_df <- adult_df[adult_df$age >= 18,]
+
+adult_df <- adult_df[adult_df$age <= 90,]
+
+adult_df <- adult_df[!adult_df$education != 'Preschool',]
+```
+
+g)  Report your final sample size.
+
+```{r}
+nrow(adult_df)
+```
+
+## Exercise 3
+
+a)  Write a function nextHappy() that given a positive integer, computes the next value in the happy-number sequence. Be sure to provide a reasonable error on an invalid input. Be sure to document your function (see instructions above).
+
+```{r}
+nextHappy <- function(input) {
+  
+  digits <- as.numeric(strsplit(as.character(input), "")[[1]])
+  number <- 0
+  for (digit in digits) {
+    number <- number + (digit * digit)
+  }
+  return(number)
+}
+
+```
+
+Example 1:
+
+```{r}
+print(nextHappy(19))
+```
+
+Example 2:
+
+```{r}
+print(nextHappy(82))
+```
+
+b)  Create a function happySequence() that returns the sequence beginning at a given number. Use your nextHappy() function to perform the calculation. Be sure to provide a reasonable error on an invalid input. Be sure to document your function (see instructions above).
+
+```{r}
+happySequence <- function(input) {
+  seen <- c()
+  curr <- input
+  sequence <- c(input)
+  
+  while(curr != 1 && !(curr %in% seen)) {
+    seen <- c(seen, curr)
+    curr <- nextHappy(curr)
+    sequence <- c(sequence, curr)
+    
+  }
+  
+  is_happy <- (curr == 1)
+  
+  if (is_happy) {
+    return(list(
+      sequence = sequence,
+      isHappy = is_happy
+      ))
+  } else {
+    return(list(
+      sequence = c(),
+      isHappy = is_happy
+      ))
+  }
+
+}
+
+
+```
+
+```{r}
+print(happySequence(7))
+```
+
+```{r}
+print(happySequence(4))
+```
+
+c)  
+
+```{r}
+count <- 0
+
+for (i in 1:100) {
+  is_happy <- happySequence(i)$isHappy
+  if (is_happy) {count <- count + 1}
+}
+
+print(count)
+print(count/100)
+
+ans <- 15999
+print(ans)
+```

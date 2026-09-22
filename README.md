@@ -1,2 +1,2 @@
-# Homework_1
-STATS 506 HW1 Repository
+# 506-hw1
+directory for 506 homework 1
